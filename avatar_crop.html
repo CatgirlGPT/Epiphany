@@ -1,126 +1,670 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <style>
-        .avatar-container {
-            width: 128px;
-            height: 128px;
-            position: relative;
-            margin: 50px auto;
-        }
-        .avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        #particle-canvas {
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            width: calc(100% + 40px);
-            height: calc(100% + 40px);
-            pointer-events: none;
-        }
-        .download-btn {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: linear-gradient(45deg, #6e3996, #3c7ddb);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Discord Avatar Border Generator</title>
+  <style>
+    :root {
+      --primary: #8a2be2;
+      --secondary: #ff69b4;
+      --bg: #0a0a1a;
+      --text: #e0e0ff;
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.2), transparent 40%);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-align: center;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-top: 0.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(20, 20, 40, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    .upload-section {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .upload-button {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: transform 0.2s;
+    }
+    
+    .upload-button:hover {
+      transform: scale(1.05);
+    }
+    
+    #file-input {
+      display: none;
+    }
+    
+    .preview-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .avatar-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px 0;
+    }
+    
+    .avatar-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    
+    #avatar-canvas {
+      z-index: 2;
+    }
+    
+    #particles-canvas {
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .controls {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    
+    .control-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .flex-row {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .flex-column {
+      flex: 1;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      background: rgba(138, 43, 226, 0.3);
+      height: 8px;
+      border-radius: 4px;
+      -webkit-appearance: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--secondary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    
+    input[type="color"] {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    
+    .color-picker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .download-button {
+      background: linear-gradient(to right, var(--secondary), var(--primary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      transition: transform 0.2s;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .download-button.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .download-button.active:hover {
+      transform: scale(1.05);
+    }
+    
+    .instructions {
+      margin-top: 30px;
+      padding: 15px;
+      background: rgba(138, 43, 226, 0.1);
+      border-radius: 8px;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .instructions h3 {
+      margin-top: 0;
+      color: var(--secondary);
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+    
+    .float {
+      animation: float 5s ease-in-out infinite;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .avatar-container {
+        width: 250px;
+        height: 250px;
+      }
+      
+      .flex-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="avatar-container">
-        <img id="avatar" class="avatar" src="your-image.jpg">
-        <canvas id="particle-canvas"></canvas>
+  <div class="container">
+    <h1>Discord Avatar Border Generator</h1>
+    <p class="subtitle">Create a custom bordered avatar with particle effects</p>
+    
+    <div class="upload-section">
+      <label for="file-input" class="upload-button">Upload Your Image</label>
+      <input type="file" id="file-input" accept="image/*">
+      <p id="upload-message">Upload a square image for best results</p>
     </div>
-    <button class="download-btn" onclick="downloadImage()">Download Avatar</button>
-
-    <script>
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        const particles = [];
-
-        canvas.width = 208;
-        canvas.height = 208;
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.speed = 0.5 + Math.random() * 1;
-                this.angle = Math.random() * Math.PI * 2;
-                this.size = 1 + Math.random() * 2;
-                this.hue = Math.random() * 60 + 240; // Blue to purple range
-            }
-update() {
-                this.angle += 0.02;
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed;
-
-                if (this.x < 0) this.x = canvas.width;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.y < 0) this.y = canvas.height;
-                if (this.y > canvas.height) this.y = 0;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.fillStyle = hsla(${this.hue}, 70%, 60%, 0.8);
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
+    
+    <div class="preview-section">
+      <div class="avatar-container float">
+        <canvas id="avatar-canvas" width="1000" height="1000"></canvas>
+        <canvas id="particles-canvas" width="1000" height="1000"></canvas>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <div class="flex-row">
+        <div class="flex-column">
+          <div class="control-group">
+            <label for="border-thickness">Border Thickness</label>
+            <input type="range" id="border-thickness" min="5" max="50" value="25">
+          </div>
+          
+          <div class="control-group">
+            <label for="particle-amount">Particle Amount</label>
+            <input type="range" id="particle-amount" min="0" max="200" value="100">
+          </div>
+          
+          <div class="control-group">
+            <label for="particle-size">Particle Size</label>
+            <input type="range" id="particle-size" min="1" max="10" value="3">
+          </div>
+        </div>
+        
+        <div class="flex-column">
+          <div class="control-group">
+            <label>Border Gradient Colors</label>
+            <div class="color-picker">
+              <input type="color" id="color-start" value="#8a2be2">
+              <span>Primary</span>
+            </div>
+            <div class="color-picker">
+              <input type="color" id="color-end" value="#ff69b4">
+              <span>Secondary</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button id="download-button" class="download-button">Download Avatar</button>
+    </div>
+    
+    <div class="instructions">
+      <h3>How to use:</h3>
+      <ol>
+        <li>Upload a square image (recommended size: 1000x1000 pixels)</li>
+        <li>Adjust the border thickness and colors as desired</li>
+        <li>Adjust the particle effect density (set to 0 to remove particles)</li>
+        <li>Download your new avatar</li>
+        <li>Use the downloaded image as your Discord profile picture</li>
+      </ol>
+      <p><strong>Note:</strong> Discord crops profile pictures to a circle, so your border will show up perfectly!</p>
+    </div>
+  </div>
+  
+  <script>
+    // DOM Elements
+    const fileInput = document.getElementById('file-input');
+    const uploadMessage = document.getElementById('upload-message');
+    const avatarCanvas = document.getElementById('avatar-canvas');
+    const particlesCanvas = document.getElementById('particles-canvas');
+    const avatarCtx = avatarCanvas.getContext('2d', { willReadFrequently: true });
+    const particlesCtx = particlesCanvas.getContext('2d', { willReadFrequently: true });
+    const downloadButton = document.getElementById('download-button');
+    
+    // Control Elements
+    const borderThicknessInput = document.getElementById('border-thickness');
+    const particleAmountInput = document.getElementById('particle-amount');
+    const colorStartInput = document.getElementById('color-start');
+    const colorEndInput = document.getElementById('color-end');
+    
+    // Variables
+    let userImage = null;
+    let particles = [];
+    let particleAmount = parseInt(particleAmountInput.value);
+    let particleSize = parseInt(document.getElementById('particle-size').value);
+    let isDrawing = false;
+    let animationId = null;
+    
+    // Initialize canvas
+    function initCanvas() {
+      avatarCtx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+      particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+      
+      // Display placeholder
+      avatarCtx.fillStyle = 'rgba(20, 20, 40, 0.6)';
+      avatarCtx.beginPath();
+      avatarCtx.arc(avatarCanvas.width / 2, avatarCanvas.height / 2, avatarCanvas.width / 2, 0, Math.PI * 2);
+      avatarCtx.fill();
+      
+      // Placeholder text
+      avatarCtx.fillStyle = '#e0e0ff';
+      avatarCtx.font = '40px "Exo 2"';
+      avatarCtx.textAlign = 'center';
+      avatarCtx.fillText('Upload an image', avatarCanvas.width / 2, avatarCanvas.height / 2);
+      
+      // Placeholder border
+      drawBorder();
+    }
+    
+    // Handle file upload
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const img = new Image();
+          img.onload = function() {
+            userImage = img;
+            drawImage();
+            // Ensure the download button is enabled
+            downloadButton.classList.add('active');
+            uploadMessage.textContent = 'Image uploaded successfully! You can now download your avatar.';
+          };
+          img.src = event.target.result;
+        };
+        
+        reader.readAsDataURL(e.target.files[0]);
+        uploadMessage.textContent = 'Processing your image...';
+      }
+    });
+    
+    // Draw the user image
+    function drawImage() {
+      if (!userImage) return;
+      
+      // Clear canvas
+      avatarCtx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+      
+      // Calculate dimensions to maintain aspect ratio
+      const size = Math.min(userImage.width, userImage.height);
+      const xOffset = (userImage.width - size) / 2;
+      const yOffset = (userImage.height - size) / 2;
+      
+      // Create circular clip
+      avatarCtx.save();
+      avatarCtx.beginPath();
+      avatarCtx.arc(avatarCanvas.width / 2, avatarCanvas.height / 2, avatarCanvas.width / 2 - borderThicknessInput.value, 0, Math.PI * 2);
+      avatarCtx.clip();
+      
+      // Draw the user image
+      avatarCtx.drawImage(
+        userImage,
+        xOffset, yOffset, size, size,
+        0, 0, avatarCanvas.width, avatarCanvas.height
+      );
+      
+      avatarCtx.restore();
+      
+      // Draw border
+      drawBorder();
+    }
+    
+    // Draw the border
+    function drawBorder() {
+      const centerX = avatarCanvas.width / 2;
+      const centerY = avatarCanvas.height / 2;
+      const radius = avatarCanvas.width / 2;
+      const borderThickness = parseInt(borderThicknessInput.value);
+      
+      // Create gradient
+      const gradient = avatarCtx.createLinearGradient(0, 0, avatarCanvas.width, avatarCanvas.height);
+      gradient.addColorStop(0, colorStartInput.value);
+      gradient.addColorStop(1, colorEndInput.value);
+      
+      avatarCtx.strokeStyle = gradient;
+      avatarCtx.lineWidth = borderThickness;
+      
+      // Draw circle
+      avatarCtx.beginPath();
+      avatarCtx.arc(centerX, centerY, radius - borderThickness / 2, 0, Math.PI * 2);
+      avatarCtx.stroke();
+    }
+    
+    // Particle class
+    class Particle {
+      constructor() {
+        // Position particles around the border circle
+        this.angle = Math.random() * Math.PI * 2;
+        const borderWidth = parseInt(borderThicknessInput.value);
+        // Set radius to be near the border
+        this.radius = (particlesCanvas.width / 2) - (borderWidth / 2) - (Math.random() * 20 - 10);
+        this.x = particlesCanvas.width / 2 + Math.cos(this.angle) * this.radius;
+        this.y = particlesCanvas.height / 2 + Math.sin(this.angle) * this.radius;
+        // Make sure particles are visible
+        this.size = Math.random() * particleSize + 2;
+        // Slower movement to keep particles near the border
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+        
+        // Use the gradient colors for particles
+        const colorRatio = Math.random();
+        const startColor = hexToRgb(colorStartInput.value);
+        const endColor = hexToRgb(colorEndInput.value);
+        
+        const r = Math.floor(startColor.r * (1 - colorRatio) + endColor.r * colorRatio);
+        const g = Math.floor(startColor.g * (1 - colorRatio) + endColor.g * colorRatio);
+        const b = Math.floor(startColor.b * (1 - colorRatio) + endColor.b * colorRatio);
+        
+        this.color = `rgb(${r}, ${g}, ${b})`;
+      }
+      
+      update() {
+        // Get the border width dynamically
+        const borderWidth = parseInt(borderThicknessInput.value);
+        const centerX = particlesCanvas.width / 2;
+        const centerY = particlesCanvas.height / 2;
+        
+        // Calculate distance from center
+        const dx = this.x - centerX;
+        const dy = this.y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Keep particles near the border
+        const targetRadius = (particlesCanvas.width / 2) - (borderWidth / 2);
+        const tolerance = 15; // How much particles can deviate from the border
+        
+        if (distance < targetRadius - tolerance) {
+          // Pull outward if too close to center
+          const angle = Math.atan2(dy, dx);
+          this.x = centerX + Math.cos(angle) * (targetRadius - tolerance + Math.random() * 5);
+          this.y = centerY + Math.sin(angle) * (targetRadius - tolerance + Math.random() * 5);
+          // Adjust speed to follow the circle
+          const tangentAngle = angle + Math.PI / 2;
+          this.speedX = Math.cos(tangentAngle) * (Math.random() * 0.5 + 0.5);
+          this.speedY = Math.sin(tangentAngle) * (Math.random() * 0.5 + 0.5);
+        } else if (distance > targetRadius + tolerance) {
+          // Pull inward if too far from center
+          const angle = Math.atan2(dy, dx);
+          this.x = centerX + Math.cos(angle) * (targetRadius + tolerance - Math.random() * 5);
+          this.y = centerY + Math.sin(angle) * (targetRadius + tolerance - Math.random() * 5);
+          // Adjust speed to follow the circle
+          const tangentAngle = angle + Math.PI / 2;
+          this.speedX = Math.cos(tangentAngle) * (Math.random() * 0.5 + 0.5);
+          this.speedY = Math.sin(tangentAngle) * (Math.random() * 0.5 + 0.5);
+        } else {
+          // Normal movement when in the right position
+          this.x += this.speedX;
+          this.y += this.speedY;
         }
-
-        // Create particles
-        for (let i = 0; i < 50; i++) {
-            particles.push(new Particle());
+        
+        // Don't shrink the particles so quickly, maintain visibility
+        if (this.size > 1) this.size -= 0.005;
+        
+        if (this.size <= 1) {
+          this.size = Math.random() * particleSize + 2;
         }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
-            });
-
-            requestAnimationFrame(animate);
+      }
+      
+      draw() {
+        // Draw with glowing effect
+        particlesCtx.shadowBlur = this.size * 2;
+        particlesCtx.shadowColor = this.color;
+        particlesCtx.fillStyle = this.color;
+        particlesCtx.beginPath();
+        particlesCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        particlesCtx.fill();
+        particlesCtx.shadowBlur = 0; // Reset shadow for performance
+      }
+    }
+    
+    // Convert hex to RGB
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    }
+    
+    // Initialize particles
+    function initParticles() {
+      // Clear existing particles
+      particles = [];
+      
+      // Only create particles if amount is greater than 0
+      if (particleAmount > 0) {
+        for (let i = 0; i < particleAmount; i++) {
+          particles.push(new Particle());
         }
-
-        function downloadImage() {
-            const finalCanvas = document.createElement('canvas');
-            const finalCtx = finalCanvas.getContext('2d');
-            finalCanvas.width = 128;
-            finalCanvas.height = 128;
-
-            // Draw avatar
-            const avatar = document.getElementById('avatar');
-            finalCtx.save();
-            finalCtx.beginPath();
-            finalCtx.arc(64, 64, 64, 0, Math.PI * 2);
-            finalCtx.clip();
-            finalCtx.drawImage(avatar, 0, 0, 128, 128);
-            finalCtx.restore();
-
-            // Draw particles
-            const scale = 128/208;
-            finalCtx.scale(scale, scale);
-            particles.forEach(particle => particle.draw());
-
+        console.log(`Created ${particles.length} particles with size ${particleSize}`);
+      } else {
+        console.log("No particles to create (amount set to 0)");
+      }
+    }
+    
+    // Animate particles
+    function animateParticles() {
+      // Cancel any existing animation frame to prevent duplicates
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      
+      if (isDrawing) {
+        animationId = requestAnimationFrame(animateParticles);
+        return;
+      }
+      
+      isDrawing = true;
+      
+      // Clear the canvas completely
+      particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+      
+      // Only draw particles if there should be some
+      if (particleAmount > 0) {
+        // Make sure we have the right number of particles
+        if (particles.length !== particleAmount) {
+          initParticles();
+        }
+        
+        // Draw and update each particle
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+        }
+        
+        // Draw connections between nearby particles
+        for (let a = 0; a < particles.length; a++) {
+          for (let b = a; b < particles.length; b++) {
+            const dx = particles[a].x - particles[b].x;
+            const dy = particles[a].y - particles[b].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 100) {
+              particlesCtx.beginPath();
+              // Make connections more visible
+              particlesCtx.strokeStyle = `rgba(${hexToRgb(colorStartInput.value).r}, ${hexToRgb(colorStartInput.value).g}, ${hexToRgb(colorStartInput.value).b}, ${Math.min(1, (1 - distance/100) * 1.5)})`;
+              particlesCtx.lineWidth = 1.5;
+              particlesCtx.moveTo(particles[a].x, particles[a].y);
+              particlesCtx.lineTo(particles[b].x, particles[b].y);
+              particlesCtx.stroke();
+            }
+          }
+        }
+      }
+      
+      isDrawing = false;
+      // Store the animation ID so we can cancel it if needed
+      animationId = requestAnimationFrame(animateParticles);
+    }
+    
+    // Update when controls change
+    borderThicknessInput.addEventListener('input', drawImage);
+    colorStartInput.addEventListener('input', function() {
+      drawImage();
+      initParticles();
+    });
+    colorEndInput.addEventListener('input', function() {
+      drawImage();
+      initParticles();
+    });
+    particleAmountInput.addEventListener('input', function() {
+      particleAmount = parseInt(this.value);
+      initParticles();
+    });
+    document.getElementById('particle-size').addEventListener('input', function() {
+      particleSize = parseInt(this.value);
+      initParticles();
+    });
+    
+    // Download button with more robust implementation
+    downloadButton.addEventListener('click', function() {
+      if (!userImage) return;
+      
+      try {
+        // Create a temporary canvas to combine the avatar and particles
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = avatarCanvas.width;
+        tempCanvas.height = avatarCanvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Clear the temporary canvas first
+        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // Draw the avatar canvas
+        tempCtx.drawImage(avatarCanvas, 0, 0);
+        
+        // Draw the particles canvas
+        tempCtx.drawImage(particlesCanvas, 0, 0);
+        
+        // Try using toBlob (more reliable in some browsers)
+        if (tempCanvas.toBlob) {
+          tempCanvas.toBlob(function(blob) {
+            // Create object URL from blob
+            const url = URL.createObjectURL(blob);
+            
             // Create download link
-            const link = document.createElement('a');
-            link.download = 'discord-avatar.png';
-            link.href = finalCanvas.toDataURL();
-link.click();
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'discord-avatar.png';
+            
+            // Append to body (required for Firefox)
+            document.body.appendChild(downloadLink);
+            
+            // Trigger click
+            downloadLink.click();
+            
+            // Clean up
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+          }, 'image/png');
+        } else {
+          // Fallback to toDataURL if toBlob is not available
+          const dataURL = tempCanvas.toDataURL('image/png');
+          
+          const downloadLink = document.createElement('a');
+          downloadLink.href = dataURL;
+          downloadLink.download = 'discord-avatar.png';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
         }
-
-        animate();
-    </script>
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('There was an error downloading your avatar. Please try again or try a different browser.');
+      }
+    });
+    
+    // Initialize
+    initCanvas();
+    initParticles();
+    animateParticles();
+  </script>
 </body>
 </html>
